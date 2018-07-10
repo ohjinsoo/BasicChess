@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.HashMap;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.atan;
 
 public class ChessCanvas  extends Canvas implements MouseListener {
     private JFrame frame;
@@ -215,6 +216,14 @@ public class ChessCanvas  extends Canvas implements MouseListener {
         attacker.setPos(pos);
         attacker.setXY(xPos.get(pos.charAt(0)), yPos.get(Integer.parseInt((pos.substring(1)))));
 
+        int promotionY = 1;
+        if (attacker.isWhite())
+            promotionY = 8;
+
+        if (attacker instanceof Pawn && Integer.parseInt(pos.substring(1)) == promotionY) {
+            promotePawn();
+        }
+
         attackMode = false;
         attacker = null;
 
@@ -225,6 +234,40 @@ public class ChessCanvas  extends Canvas implements MouseListener {
 
         isWhiteTurn = !isWhiteTurn;
         this.repaint();
+    }
+
+    private void promotePawn() {
+        String[] possiblePieces = { "Queen", "Rook", "Bishop", "Knight", "Pawn" };
+        Object selectedPiece = JOptionPane.showInputDialog(null,
+                "Choose which class to promote your pawn to.", "Input",
+                JOptionPane.INFORMATION_MESSAGE, null,
+                possiblePieces, possiblePieces[0]);
+
+        if (selectedPiece == "Queen") {
+            System.out.println("happened!!!");
+            attacker = new Queen(attacker.getPos(), attacker.getX(), attacker.getY(), attacker.isWhite());
+        }
+        else if (selectedPiece == "Rook")
+            attacker = new Rook(attacker.getPos(), attacker.getX(), attacker.getY(), attacker.isWhite());
+        else if (selectedPiece == "Bishop")
+            attacker = new Bishop(attacker.getPos(), attacker.getX(), attacker.getY(), attacker.isWhite());
+        else if (selectedPiece == "Knight")
+            attacker = new Knight(attacker.getPos(), attacker.getX(), attacker.getY(), attacker.isWhite());
+        else if (selectedPiece == "Pawn")
+            attacker = new Pawn(attacker.getPos(), attacker.getX(), attacker.getY(), attacker.isWhite());
+
+        for (int i = 0; i < 8; i++) {
+            if (black[i].getPos().equals(attacker.getPos())) {
+                black[i] = attacker;
+                piecesMap.put(attacker.getPos(), attacker);
+                break;
+            }
+            else if (white[i].getPos().equals(attacker.getPos())) {
+                white[i] = attacker;
+                piecesMap.put(attacker.getPos(), attacker);
+                break;
+            }
+        }
     }
 
     @Override
@@ -287,7 +330,12 @@ public class ChessCanvas  extends Canvas implements MouseListener {
         char xAttack = attacker.getPos().charAt(0);
         int yPos = Integer.parseInt(pos.substring(1));
         int yAttack = Integer.parseInt(attacker.getPos().substring(1));
-        int diff = abs(xPos - xAttack) - 1;
+        int xdiff = abs(xPos - xAttack);
+        int ydiff = abs(yPos - yAttack);
+
+        // Check to make sure it is an actual diagonal move.
+        if (xdiff != ydiff)
+            return false;
 
         int xRate = 1;
         if (xAttack < xPos)
@@ -300,13 +348,14 @@ public class ChessCanvas  extends Canvas implements MouseListener {
         char inc = xPos;
         inc += xRate;
 
-        for (int i = 0; i < diff; i ++) {
+        for (int i = 0; i < xdiff - 1; i ++) {
             yPos += yRate;
             String tempPos = inc + Integer.toString(yPos);
-
-            if (piecesMap.containsKey(tempPos))
+            System.out.println("checking for diag. collision at: " + tempPos);
+            if (piecesMap.containsKey(tempPos)) {
+                System.out.println("COLLISION DETECTED AT: " + tempPos);
                 return true;
-
+            }
             inc += xRate;
         }
 
@@ -322,6 +371,10 @@ public class ChessCanvas  extends Canvas implements MouseListener {
         int xdiff = abs(xPos - xAttack);
         int ydiff = abs(yPos - yAttack);
 
+        // Check to make sure it is an actual straight move.
+        if (xdiff == ydiff)
+            return false;
+
         if (xdiff != 0) {
             char lower = xAttack;
             char upper = xPos;
@@ -332,11 +385,14 @@ public class ChessCanvas  extends Canvas implements MouseListener {
             lower++;
             for (char i = lower; i < upper; i++) {
                 String tempPos = i + Integer.toString(yPos);
-                if (piecesMap.containsKey(tempPos))
+                System.out.println("checking for straight collision at: " + tempPos);
+                if (piecesMap.containsKey(tempPos)) {
+                    System.out.println("COLLISION DETECTED AT: " + tempPos);
                     return true;
+                }
             }
         }
-        else if (ydiff != 0) {
+        else {
             int lower = yAttack;
             int upper = yPos;
             if (yPos < yAttack) {
@@ -346,8 +402,11 @@ public class ChessCanvas  extends Canvas implements MouseListener {
             lower++;
             for (int i = lower; i < upper; i++) {
                 String tempPos = xPos + Integer.toString(i);
-                if (piecesMap.containsKey(tempPos))
+                System.out.println("checking for straight collision at: " + tempPos);
+                if (piecesMap.containsKey(tempPos)) {
+                    System.out.println("COLLISION DETECTED AT: " + tempPos);
                     return true;
+                }
             }
         }
 

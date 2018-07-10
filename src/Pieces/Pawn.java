@@ -55,7 +55,20 @@ public class Pawn extends Piece {
             if (!movedBefore)
                 diffLimit = 2;
 
-            boolean ret = (newX == xchar) && (newY - yint <= diffLimit);
+            int lower = newY;
+            int upper = yint;
+
+            if (isWhite) {
+                lower = yint;
+                upper = newY;
+            }
+
+            System.out.println("upper: " + upper);
+            System.out.println("lower: " + lower);
+            System.out.println("diffLimit: " + diffLimit);
+
+            boolean ret = (newX == xchar) && (upper - lower <= diffLimit) && (upper - lower >= 0);
+            System.out.println(ret);
             if (ret)
                 movedBefore = true;
 
