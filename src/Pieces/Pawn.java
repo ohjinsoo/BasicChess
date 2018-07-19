@@ -57,20 +57,20 @@ public class Pawn extends Piece {
 
             int lower = newY;
             int upper = yint;
+            int enpassantDifference = 1;
 
             if (isWhite) {
                 lower = yint;
                 upper = newY;
+                enpassantDifference = -1;
             }
 
-            System.out.println("upper: " + upper);
-            System.out.println("lower: " + lower);
-            System.out.println("diffLimit: " + diffLimit);
-
             boolean ret = (newX == xchar) && (upper - lower <= diffLimit) && (upper - lower >= 0);
-            System.out.println(ret);
-            if (ret)
+            if (ret) {
                 movedBefore = true;
+                if (upper - lower == 2)
+                    enpassantPos = newPos.substring(0, 1) + Integer.toString(Integer.parseInt(newPos.substring(1)) + enpassantDifference);
+            }
 
             return ret;
         }

@@ -1,4 +1,5 @@
 import Pieces.*;
+import javafx.util.Pair;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -44,6 +45,7 @@ public class ChessCanvas  extends Canvas implements MouseListener {
     private boolean isWhiteTurn = true;
     private boolean attackMode = false;
     private Piece attacker;
+    private Pair enpassantPair = null;
 
     public ChessCanvas(JFrame frame) {
         this.frame = frame;
@@ -148,6 +150,12 @@ public class ChessCanvas  extends Canvas implements MouseListener {
         for (int i = 0; i < 16; i++) {
             black[i].paint(g);
             white[i].paint(g);
+
+            // Reset en passant positions for the appropriate color.
+            if (isWhiteTurn)
+                white[i].setEnpassantPos("");
+            else
+                black[i].setEnpassantPos("");
         }
 
         if (isGameOver) {
@@ -184,30 +192,10 @@ public class ChessCanvas  extends Canvas implements MouseListener {
      */
     private void move(String pos) {
         if (piecesMap.containsKey(pos)) {
-            Piece deadPiece = piecesMap.get(pos);
-            String deadPos = "DEAD";
-            int dX = 0;
-            int dY = 0;
-
-            if (isWhiteTurn) {
-                deadPos += blackDead;
-                dX = blackDeadX[blackDead % 2];
-                dY = deadY[blackDead / 2];
-                blackDead++;
-            }
-            else {
-                deadPos += whiteDead;
-                dX = whiteDeadX[whiteDead % 2];
-                dY = deadY[whiteDead / 2];
-                whiteDead++;
-            }
-            deadPiece.setPos(deadPos);
-            deadPiece.setXY(dX, dY);
-
-            if (deadPiece instanceof King) {
-                isGameOver = true;
-                whiteWon = !deadPiece.isWhite();
-            }
+            removePieceFromBoard(pos);
+        }
+        else if (enpassantPair != null && enpassantPair.getKey().equals(pos)) {
+            removePieceFromBoard((String)enpassantPair.getValue());
         }
 
         piecesMap.remove(attacker.getPos());
@@ -224,6 +212,11 @@ public class ChessCanvas  extends Canvas implements MouseListener {
             promotePawn();
         }
 
+        if (!attacker.getEnpassantPos().equals(""))
+            enpassantPair = new Pair<>(attacker.getEnpassantPos(), attacker.getPos());
+        else
+            enpassantPair = null;
+
         attackMode = false;
         attacker = null;
 
@@ -234,6 +227,33 @@ public class ChessCanvas  extends Canvas implements MouseListener {
 
         isWhiteTurn = !isWhiteTurn;
         this.repaint();
+    }
+
+    private void removePieceFromBoard(String pos) {
+        Piece deadPiece = piecesMap.get(pos);
+        String deadPos = "DEAD";
+        int dX = 0;
+        int dY = 0;
+
+        if (isWhiteTurn) {
+            deadPos += blackDead;
+            dX = blackDeadX[blackDead % 2];
+            dY = deadY[blackDead / 2];
+            blackDead++;
+        }
+        else {
+            deadPos += whiteDead;
+            dX = whiteDeadX[whiteDead % 2];
+            dY = deadY[whiteDead / 2];
+            whiteDead++;
+        }
+        deadPiece.setPos(deadPos);
+        deadPiece.setXY(dX, dY);
+
+        if (deadPiece instanceof King) {
+            isGameOver = true;
+            whiteWon = !deadPiece.isWhite();
+        }
     }
 
     private void promotePawn() {
@@ -286,37 +306,37 @@ public class ChessCanvas  extends Canvas implements MouseListener {
             restartGame = true;
             return;
         }
-
+        System.out.println(enpassantPair);
         int x = e.getX();
         int y = e.getY();
 
-        System.out.println("X: " + x);
-        System.out.println("Y: " + y);
         int tempX = (x - INNER_BOUND_X) / PIECE_WIDTH;
         char boardX = 'A';
         int boardY = (y - INNER_BOUND_Y) / PIECE_HEIGHT;
 
         boardX += tempX;
         String pos = boardX + Integer.toString(8 - boardY);
-        System.out.println(pos);
 
         // Check if in bounds.
         if (x >= INNER_BOUND_X && y >= INNER_BOUND_Y && x <= OUTER_BOUND_X && y <= OUTER_BOUND_Y) {
-
             // If a piece was already clicked on previously, it is now attack mode. Choose where to send your piece.
             // Make sure the move is valid.
-            if (attackMode && (!piecesMap.containsKey(pos) || piecesMap.get(pos).isWhite() != isWhiteTurn) &&
-                    attacker.moveIsValid(pos, piecesMap.containsKey(pos))) {
+            if (attackMode && (!piecesMap.containsKey(pos) || piecesMap.get(pos).isWhite() != isWhiteTurn)) {
+                boolean attacking = piecesMap.containsKey(pos);
+                if (enpassantPair != null)
+                    attacking = attacking || enpassantPair.getKey().equals(pos);
 
-                //Check for any collision IF you're not a horse or King.
-                boolean collision = false;
-                if (attacker instanceof Queen || attacker instanceof Bishop)
-                    collision = diagonalCollision(pos);
-                if ((attacker instanceof Queen || attacker instanceof Rook || attacker instanceof Pawn) && !collision)
-                    collision = straightCollision(pos);
+                if (attacker.moveIsValid(pos, attacking)) {
+                    //Check for any collision IF you're not a horse or King.
+                    boolean collision = false;
+                    if (attacker instanceof Queen || attacker instanceof Bishop)
+                        collision = diagonalCollision(pos);
+                    if ((attacker instanceof Queen || attacker instanceof Rook || attacker instanceof Pawn) && !collision)
+                        collision = straightCollision(pos);
 
-                if (!collision)
-                    move(pos);
+                    if (!collision)
+                        move(pos);
+                }
             }
 
             // Else, not in attack mode. Choose a piece that is yours to move.
@@ -396,8 +416,8 @@ public class ChessCanvas  extends Canvas implements MouseListener {
             int lower = yAttack;
             int upper = yPos;
             if (yPos < yAttack) {
-                lower = xPos;
-                upper = xAttack;
+                lower = yPos;
+                upper = yAttack;
             }
             lower++;
             for (int i = lower; i < upper; i++) {

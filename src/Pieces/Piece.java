@@ -6,6 +6,7 @@ public abstract class Piece {
     protected String pos;
     protected int x, y;
     protected boolean isWhite;
+    protected String enpassantPos = "";
 
     public Piece(String pos, int x, int y, boolean isWhite) {
         this.pos = pos;
@@ -49,6 +50,14 @@ public abstract class Piece {
 
     public void setWhite(boolean white) {
         isWhite = white;
+    }
+
+    public String getEnpassantPos() {
+        return enpassantPos;
+    }
+
+    public void setEnpassantPos(String enpassantPos) {
+        this.enpassantPos = enpassantPos;
     }
 
     public abstract void paint(Graphics g);
