@@ -9,7 +9,6 @@ import static java.lang.Math.abs;
 
 public class Pawn extends Piece {
     private BufferedImage pawn;
-    private boolean movedBefore = false;
 
     public Pawn(String pos, int x, int y, boolean isWhite) {
         super(pos, x, y, isWhite);
@@ -46,13 +45,13 @@ public class Pawn extends Piece {
                 ydiff = newY - yint;
             boolean ret = (xdiff == 1 && ydiff == 1);
             if (ret)
-                movedBefore = true;
+                hasMoved = true;
 
             return ret;
         }
         else {
             int diffLimit = 1;
-            if (!movedBefore)
+            if (!hasMoved)
                 diffLimit = 2;
 
             int lower = newY;
@@ -67,7 +66,7 @@ public class Pawn extends Piece {
 
             boolean ret = (newX == xchar) && (upper - lower <= diffLimit) && (upper - lower >= 0);
             if (ret) {
-                movedBefore = true;
+                hasMoved = true;
                 if (upper - lower == 2)
                     enpassantPos = newPos.substring(0, 1) + Integer.toString(Integer.parseInt(newPos.substring(1)) + enpassantDifference);
             }

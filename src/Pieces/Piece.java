@@ -5,6 +5,7 @@ import java.awt.*;
 public abstract class Piece {
     protected String pos;
     protected int x, y;
+    protected boolean hasMoved = false;
     protected boolean isWhite;
     protected String enpassantPos = "";
 
@@ -29,6 +30,14 @@ public abstract class Piece {
 
     public boolean isWhite() {
         return isWhite;
+    }
+
+    public boolean hasMoved() {
+        return hasMoved;
+    }
+
+    public void setMoved(boolean hasMoved) {
+        this.hasMoved = hasMoved;
     }
 
     public void setPos(String pos) {

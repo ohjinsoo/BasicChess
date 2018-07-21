@@ -40,6 +40,11 @@ public class Knight extends Piece {
         int xdiff = abs(newX - xchar);
         int ydiff = abs(newY - yint);
 
-        return (xdiff == 2 && ydiff == 1) || (xdiff == 1 && ydiff == 2);
+        boolean ret = (xdiff == 2 && ydiff == 1) || (xdiff == 1 && ydiff == 2);
+
+        if (ret)
+            hasMoved = true;
+
+        return ret;
     }
 }

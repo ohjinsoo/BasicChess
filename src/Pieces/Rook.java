@@ -40,6 +40,11 @@ public class Rook extends Piece {
         int xdiff = abs(newX - xchar);
         int ydiff = abs(newY - yint);
 
-        return xdiff == 0 || ydiff == 0;
+        boolean ret = (xdiff == 0) || (ydiff == 0);
+
+        if (ret)
+            hasMoved = true;
+
+        return ret;
     }
 }

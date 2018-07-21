@@ -40,6 +40,11 @@ public class Queen extends Piece {
         int xdiff = abs(newX - xchar);
         int ydiff = abs(newY - yint);
 
-        return xdiff == ydiff || xdiff == 0 || ydiff == 0;
+        boolean ret = (xdiff == ydiff) || (xdiff == 0) || (ydiff == 0);
+
+        if (ret)
+            hasMoved = true;
+
+        return ret;
     }
 }

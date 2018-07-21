@@ -328,11 +328,7 @@ public class ChessCanvas  extends Canvas implements MouseListener {
 
                 if (attacker.moveIsValid(pos, attacking)) {
                     //Check for any collision IF you're not a horse or King.
-                    boolean collision = false;
-                    if (attacker instanceof Queen || attacker instanceof Bishop)
-                        collision = diagonalCollision(pos);
-                    if ((attacker instanceof Queen || attacker instanceof Rook || attacker instanceof Pawn) && !collision)
-                        collision = straightCollision(pos);
+                    boolean collision = checkForCollsion(attacker, pos);
 
                     if (!collision)
                         move(pos);
@@ -340,16 +336,123 @@ public class ChessCanvas  extends Canvas implements MouseListener {
             }
 
             // Else, not in attack mode. Choose a piece that is yours to move.
-            else if (piecesMap.containsKey(pos) && piecesMap.get(pos).isWhite() == isWhiteTurn)
+            else if (piecesMap.containsKey(pos) && piecesMap.get(pos).isWhite() == isWhiteTurn) {
+                if (attacker != null && ((piecesMap.get(pos) instanceof Rook && attacker instanceof King) ||
+                        (piecesMap.get(pos) instanceof King && attacker instanceof Rook)) && canCastle(piecesMap.get(pos))) {
+                    int castled = JOptionPane.showConfirmDialog(null, "Would you like to castle with your selected Rook and King?");
+                    if (castled == 0) {
+                        castle(piecesMap.get(pos));
+                        return;
+                    }
+                }
                 choosePieceToUpdate(pos);
+            }
         }
     }
 
-    private boolean diagonalCollision(String pos) {
+    private boolean canCastle(Piece piece) {
+        Piece king = piece;
+        Piece rook = attacker;
+        if (piece instanceof Rook) {
+            king = attacker;
+            rook = piece;
+        }
+
+        if (king.hasMoved() || rook.hasMoved() || straightCollision(king.getPos(), rook.getPos()))
+            return false;
+
+        boolean check;
+        if (isWhiteTurn)
+            check = checkForChecks(black, king);
+        else
+            check = checkForChecks(white, king);
+
+        return !check;
+    }
+
+    private boolean checkForChecks(Piece[] pieces, Piece king) {
+        for (Piece piece : pieces) {
+            boolean isInCheck = piece.moveIsValid(king.getPos(), true);
+            isInCheck = isInCheck && !checkForCollsion(piece, king.getPos());
+            if (isInCheck)
+                return true;
+        }
+
+        return false;
+    }
+
+    private void castle(Piece piece) {
+        Piece king = piece;
+        Piece rook = attacker;
+        if (piece instanceof Rook) {
+            king = attacker;
+            rook = piece;
+        }
+
+        int kingX;
+        int rookX;
+        char kingCharX;
+        char rookCharX;
+
+        if (king.getX() > rook.getX()) {
+            kingX = xPos.get('C');
+            rookX = xPos.get('D');
+
+            kingCharX = 'C';
+            rookCharX = 'D';
+        }
+        else {
+            kingX = xPos.get('G');
+            rookX = xPos.get('F');
+
+            kingCharX = 'G';
+            rookCharX = 'F';
+        }
+
+
+
+        king.setX(kingX);
+        rook.setX(rookX);
+
+        String kingPos = kingCharX + king.getPos().substring(1);
+        String rookPos = rookCharX + rook.getPos().substring(1);
+
+        piecesMap.remove(king.getPos());
+        piecesMap.put(kingPos, king);
+
+        piecesMap.remove(rook.getPos());
+        piecesMap.put(rookPos, rook);
+
+        king.setPos(kingPos);
+        rook.setPos(rookPos);
+
+        attackMode = false;
+        attacker = null;
+
+        if (isWhiteTurn)
+            turnX = 806;
+        else
+            turnX = 8;
+
+        isWhiteTurn = !isWhiteTurn;
+        this.repaint();
+    }
+
+    private boolean checkForCollsion(Piece attack, String pos) {
+        boolean collision = false;
+        if (attack instanceof Queen || attack instanceof Bishop)
+            collision = diagonalCollision(attack.getPos(), pos);
+        if ((attack instanceof Queen || attack instanceof Rook || attack instanceof Pawn) && !collision)
+            collision = straightCollision(attack.getPos(), pos);
+
+        return collision;
+    }
+
+    private boolean diagonalCollision(String attackPos, String pos) {
         char xPos = pos.charAt(0);
-        char xAttack = attacker.getPos().charAt(0);
+        char xAttack = attackPos.charAt(0);
         int yPos = Integer.parseInt(pos.substring(1));
-        int yAttack = Integer.parseInt(attacker.getPos().substring(1));
+        int yAttack = Integer.parseInt(attackPos.substring(1));
         int xdiff = abs(xPos - xAttack);
         int ydiff = abs(yPos - yAttack);
 
@@ -382,11 +485,11 @@ public class ChessCanvas  extends Canvas implements MouseListener {
         return false;
     }
 
-    private boolean straightCollision(String pos) {
+    private boolean straightCollision(String attackPos, String pos) {
         char xPos = pos.charAt(0);
-        char xAttack = attacker.getPos().charAt(0);
+        char xAttack = attackPos.charAt(0);
         int yPos = Integer.parseInt(pos.substring(1));
-        int yAttack = Integer.parseInt(attacker.getPos().substring(1));
+        int yAttack = Integer.parseInt(attackPos.substring(1));
 
         int xdiff = abs(xPos - xAttack);
         int ydiff = abs(yPos - yAttack);

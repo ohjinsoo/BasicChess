@@ -40,6 +40,11 @@ public class Bishop extends Piece {
         int xdiff = abs(newX - xchar);
         int ydiff = abs(newY - yint);
 
-        return xdiff == ydiff;
+        boolean ret = (xdiff == ydiff);
+
+        if (ret)
+            hasMoved = true;
+
+        return ret;
     }
 }

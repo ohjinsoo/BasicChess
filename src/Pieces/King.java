@@ -40,6 +40,10 @@ public class King extends Piece {
         int xdiff = abs(xchar - newX);
         int ydiff = abs(yint - newY);
 
-        return (xdiff <= 1) && (ydiff <= 1);
+        boolean ret = (xdiff <= 1) && (ydiff <= 1);
+
+        if (ret)
+            hasMoved = true;
+        return ret;
     }
 }
