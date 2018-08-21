@@ -1,5 +1,5 @@
 # BasicChess
-Chess game using Java2D. Singleplayer only ( for now :o )
+Chess game using Java2D.
 
 ### Dependencies
 * `None` 
